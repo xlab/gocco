@@ -1,9 +1,11 @@
 package main
 
 var Css = `
+@import 'https://fonts.googleapis.com/css?family=Lato:400,400i,700';
+
 /*--------------------- Layout and Typography ----------------------------*/
 body {
-  font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, FreeSerif, serif;
+  font-family: 'Lato', 'Helvetica Neue', 'Palatino Linotype', 'Book Antiqua', Palatino, FreeSerif, serif;
   font-size: 15px;
   line-height: 22px;
   color: #252519;
@@ -20,6 +22,7 @@ p {
 }
 h1, h2, h3, h4, h5, h6 {
   margin: 0px 0 15px 0;
+  color: #F59331;
 }
   h1 {
     margin-top: 40px;
@@ -30,7 +33,7 @@ h1, h2, h3, h4, h5, h6 {
 #background {
   position: fixed;
   top: 0; left: 525px; right: 0; bottom: 0;
-  background: #f5f5ff;
+  background: #f4f4f4;
   border-left: 1px solid #e5e5ee;
   z-index: -1;
 }
@@ -113,7 +116,7 @@ table td {
     padding: 14px 15px 16px 25px;
     width: 100%;
     vertical-align: top;
-    background: #f5f5ff;
+    background: #f4f4f4;
     border-left: 1px solid #e5e5ee;
   }
     pre, tt, code {
@@ -138,34 +141,34 @@ body .cs { color: #408080; font-style: italic } /* Comment.Special */
 body .gd { color: #A00000 }                     /* Generic.Deleted */
 body .ge { font-style: italic }                 /* Generic.Emph */
 body .gr { color: #FF0000 }                     /* Generic.Error */
-body .gh { color: #000080; font-weight: bold }  /* Generic.Heading */
+body .gh { color: #000080 }  /* Generic.Heading */
 body .gi { color: #00A000 }                     /* Generic.Inserted */
 body .go { color: #808080 }                     /* Generic.Output */
-body .gp { color: #000080; font-weight: bold }  /* Generic.Prompt */
+body .gp { color: #000080 }  /* Generic.Prompt */
 body .gs { font-weight: bold }                  /* Generic.Strong */
-body .gu { color: #800080; font-weight: bold }  /* Generic.Subheading */
+body .gu { color: #800080 }  /* Generic.Subheading */
 body .gt { color: #0040D0 }                     /* Generic.Traceback */
 body .kc { color: #954121 }                     /* Keyword.Constant */
-body .kd { color: #954121; font-weight: bold }  /* Keyword.Declaration */
-body .kn { color: #954121; font-weight: bold }  /* Keyword.Namespace */
+body .kd { color: #954121 }  /* Keyword.Declaration */
+body .kn { color: #954121 }  /* Keyword.Namespace */
 body .kp { color: #954121 }                     /* Keyword.Pseudo */
-body .kr { color: #954121; font-weight: bold }  /* Keyword.Reserved */
+body .kr { color: #954121 }  /* Keyword.Reserved */
 body .kt { color: #B00040 }                     /* Keyword.Type */
 body .m { color: #666666 }                      /* Literal.Number */
 body .s { color: #219161 }                      /* Literal.String */
 body .na { color: #7D9029 }                     /* Name.Attribute */
 body .nb { color: #954121 }                     /* Name.Builtin */
-body .nc { color: #0000FF; font-weight: bold }  /* Name.Class */
+body .nc { color: #0000FF }  /* Name.Class */
 body .no { color: #880000 }                     /* Name.Constant */
 body .nd { color: #AA22FF }                     /* Name.Decorator */
-body .ni { color: #999999; font-weight: bold }  /* Name.Entity */
-body .ne { color: #D2413A; font-weight: bold }  /* Name.Exception */
+body .ni { color: #999999 }  /* Name.Entity */
+body .ne { color: #D2413A }  /* Name.Exception */
 body .nf { color: #0000FF }                     /* Name.Function */
 body .nl { color: #A0A000 }                     /* Name.Label */
-body .nn { color: #0000FF; font-weight: bold }  /* Name.Namespace */
-body .nt { color: #954121; font-weight: bold }  /* Name.Tag */
+body .nn { color: #0000FF }  /* Name.Namespace */
+body .nt { color: #954121 }  /* Name.Tag */
 body .nv { color: #19469D }                     /* Name.Variable */
-body .ow { color: #AA22FF; font-weight: bold }  /* Operator.Word */
+body .ow { color: #AA22FF }  /* Operator.Word */
 body .w { color: #bbbbbb }                      /* Text.Whitespace */
 body .mf { color: #666666 }                     /* Literal.Number.Float */
 body .mh { color: #666666 }                     /* Literal.Number.Hex */
@@ -175,9 +178,9 @@ body .sb { color: #219161 }                     /* Literal.String.Backtick */
 body .sc { color: #219161 }                     /* Literal.String.Char */
 body .sd { color: #219161; font-style: italic } /* Literal.String.Doc */
 body .s2 { color: #219161 }                     /* Literal.String.Double */
-body .se { color: #BB6622; font-weight: bold }  /* Literal.String.Escape */
+body .se { color: #BB6622 }  /* Literal.String.Escape */
 body .sh { color: #219161 }                     /* Literal.String.Heredoc */
-body .si { color: #BB6688; font-weight: bold }  /* Literal.String.Interpol */
+body .si { color: #BB6688 }  /* Literal.String.Interpol */
 body .sx { color: #954121 }                     /* Literal.String.Other */
 body .sr { color: #BB6688 }                     /* Literal.String.Regex */
 body .s1 { color: #219161 }                     /* Literal.String.Single */
@@ -229,10 +232,10 @@ var HTML = `
       </thead>
       <tbody>
           {{ range .Sections }}
-          <tr id="section-{{ .Index }}">
+          <tr id="section-{{ .SectionTag }}">
             <td class="docs">
               <div class="pilwrap">
-                  <a class="pilcrow" href="#section-{{ .Index }}">&#182;</a>
+                  <a class="pilcrow" href="#section-{{ .SectionTag }}">&#182;</a>
               </div>
                 {{ .DocsHTML }}
             </td>

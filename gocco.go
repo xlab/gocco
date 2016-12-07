@@ -27,7 +27,7 @@ import (
 	"bytes"
 	"container/list"
 	"flag"
-	"github.com/russross/blackfriday"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -39,6 +39,8 @@ import (
 	"strings"
 	"sync"
 	"text/template"
+
+	"github.com/russross/blackfriday"
 )
 
 // ## Types
@@ -49,19 +51,19 @@ import (
 // Every time interleaving code is found between two comments
 // a new `Section` is created.
 type Section struct {
-	docsText []byte
-	codeText []byte
-	DocsHTML []byte
-	CodeHTML []byte
+	docsText      []byte
+	codeText      []byte
+	firstCodeLine string
+	DocsHTML      []byte
+	CodeHTML      []byte
 }
 
 // a `TemplateSection` is a section that can be passed
 // to Go's templating system, which expects strings.
 type TemplateSection struct {
-	DocsHTML string
-	CodeHTML string
-	// The `Index` field is used to create anchors to sections
-	Index int
+	DocsHTML   string
+	CodeHTML   string
+	SectionTag string
 }
 
 // a `Language` describes a programming language
@@ -137,15 +139,17 @@ func parse(source string, code []byte) *list.List {
 	var docsText = new(bytes.Buffer)
 
 	// save a new section
-	save := func(docs, code []byte) {
+	save := func(docs, code []byte, firstCodeLine string) {
 		// deep copy the slices since slices always refer to the same storage
 		// by default
 		docsCopy, codeCopy := make([]byte, len(docs)), make([]byte, len(code))
 		copy(docsCopy, docs)
 		copy(codeCopy, code)
-		sections.PushBack(&Section{docsCopy, codeCopy, nil, nil})
+
+		sections.PushBack(&Section{docsCopy, codeCopy, firstCodeLine, nil, nil})
 	}
 
+	var firstCodeLine string
 	for _, line := range lines {
 		// if the line is a comment
 		if language.commentMatcher.Match(line) {
@@ -154,7 +158,7 @@ func parse(source string, code []byte) *list.List {
 				// we need to save the existing documentation and text
 				// as a section and start a new section since code blocks
 				// have to be delimited before being sent to Pygments
-				save(docsText.Bytes(), codeText.Bytes())
+				save(docsText.Bytes(), codeText.Bytes(), firstCodeLine)
 				hasCode = false
 				codeText.Reset()
 				docsText.Reset()
@@ -162,13 +166,16 @@ func parse(source string, code []byte) *list.List {
 			docsText.Write(language.commentMatcher.ReplaceAll(line, nil))
 			docsText.WriteString("\n")
 		} else {
+			if !hasCode {
+				firstCodeLine = string(line)
+			}
 			hasCode = true
 			codeText.Write(line)
 			codeText.WriteString("\n")
 		}
 	}
 	// save any remaining parts of the source file
-	save(docsText.Bytes(), codeText.Bytes())
+	save(docsText.Bytes(), codeText.Bytes(), firstCodeLine)
 	return sections
 }
 
@@ -218,6 +225,53 @@ func destination(source string) string {
 	return "docs/" + base[0:strings.LastIndex(base, filepath.Ext(base))] + ".html"
 }
 
+func getSectionTag(index int, firstCodeLine string) string {
+	if !strings.HasPrefix(firstCodeLine, "func") &&
+		!strings.HasPrefix(firstCodeLine, "type") &&
+		!strings.HasPrefix(firstCodeLine, "var") &&
+		!strings.HasPrefix(firstCodeLine, "const") {
+		// not a declaration
+		return fmt.Sprintf("%d", index)
+	}
+	// a type or variable declaration
+	parts := strings.Split(firstCodeLine, " ")
+	return strings.TrimSpace(parts[1])
+}
+
+func getFieldOrType(firstCodeLine string) string {
+	if !strings.HasPrefix(firstCodeLine, "func") &&
+		!strings.HasPrefix(firstCodeLine, "type") &&
+		!strings.HasPrefix(firstCodeLine, "var") &&
+		!strings.HasPrefix(firstCodeLine, "const") {
+		// not a declaration, field maybe?
+		parts := strings.Split(firstCodeLine, " ")
+		if len(parts) > 0 {
+			return strings.TrimSpace(parts[0])
+		}
+		return ""
+	}
+	// a type or variable declaration
+	parts := strings.Split(firstCodeLine, " ")
+	if len(parts) > 0 {
+		return strings.TrimSpace(parts[1])
+	}
+	return ""
+}
+
+func highlightRefs(text []byte, ref string) []byte {
+	if len(ref) == 0 {
+		return text
+	}
+	rx := regexp.MustCompile(fmt.Sprintf("(%s)", ref))
+	return rx.ReplaceAll(text, highlightTpl)
+}
+
+var (
+	referenceRx  = regexp.MustCompile(`@@([\w]+)`)
+	referenceTpl = []byte(`<a href="#section-$1" title="Jump to $1">$1</a>`)
+	highlightTpl = []byte(`<strong>$1</strong>`)
+)
+
 // render the final HTML
 func generateHTML(source string, sections *list.List) {
 	title := filepath.Base(source)
@@ -226,9 +280,12 @@ func generateHTML(source string, sections *list.List) {
 	sectionsArray := make([]*TemplateSection, sections.Len())
 	for e, i := sections.Front(), 0; e != nil; e, i = e.Next(), i+1 {
 		var sec = e.Value.(*Section)
+		sectionTag := getSectionTag(i+1, sec.firstCodeLine)
+		sec.DocsHTML = referenceRx.ReplaceAll(sec.DocsHTML, referenceTpl)
+		sec.DocsHTML = highlightRefs(sec.DocsHTML, getFieldOrType(sec.firstCodeLine))
 		docsBuf := bytes.NewBuffer(sec.DocsHTML)
 		codeBuf := bytes.NewBuffer(sec.CodeHTML)
-		sectionsArray[i] = &TemplateSection{docsBuf.String(), codeBuf.String(), i + 1}
+		sectionsArray[i] = &TemplateSection{docsBuf.String(), codeBuf.String(), sectionTag}
 	}
 	// run through the Go template
 	html := goccoTemplate(TemplateData{title, sectionsArray, sources, len(sources) > 1})
