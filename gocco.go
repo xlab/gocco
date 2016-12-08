@@ -277,15 +277,22 @@ func generateHTML(source string, sections *list.List) {
 	title := filepath.Base(source)
 	dest := destination(source)
 	// convert every `Section` into corresponding `TemplateSection`
-	sectionsArray := make([]*TemplateSection, sections.Len())
+	sectionsArray := make([]*TemplateSection, 0, sections.Len())
 	for e, i := sections.Front(), 0; e != nil; e, i = e.Next(), i+1 {
 		var sec = e.Value.(*Section)
 		sectionTag := getSectionTag(i+1, sec.firstCodeLine)
+
 		sec.DocsHTML = referenceRx.ReplaceAll(sec.DocsHTML, referenceTpl)
 		sec.DocsHTML = highlightRefs(sec.DocsHTML, getFieldOrType(sec.firstCodeLine))
-		docsBuf := bytes.NewBuffer(sec.DocsHTML)
-		codeBuf := bytes.NewBuffer(sec.CodeHTML)
-		sectionsArray[i] = &TemplateSection{docsBuf.String(), codeBuf.String(), sectionTag}
+		section := &TemplateSection{
+			DocsHTML:   string(sec.DocsHTML),
+			SectionTag: sectionTag,
+		}
+		if !bytes.HasPrefix(sec.codeText, []byte("package")) &&
+			!bytes.HasPrefix(sec.codeText, []byte("import")) {
+			section.CodeHTML = string(sec.CodeHTML)
+		}
+		sectionsArray = append(sectionsArray, section)
 	}
 	// run through the Go template
 	html := goccoTemplate(TemplateData{title, sectionsArray, sources, len(sources) > 1})

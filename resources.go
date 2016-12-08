@@ -24,9 +24,9 @@ h1, h2, h3, h4, h5, h6 {
   margin: 0px 0 15px 0;
   color: #F59331;
 }
-  h1 {
-    margin-top: 40px;
-  }
+table.docs {
+  margin-top: 40px;
+}
 #container {
   position: relative;
 }
@@ -218,18 +218,7 @@ var HTML = `
         </div>
       </div>
     {{ end }}
-    <table cellpadding="0" cellspacing="0">
-      <thead>
-        <tr>
-          <th class="docs">
-            <h1>
-                {{ .Title }}
-            </h1>
-          </th>
-          <th class="code">
-          </th>
-        </tr>
-      </thead>
+    <table class="docs" cellpadding="0" cellspacing="0">
       <tbody>
           {{ range .Sections }}
           <tr id="section-{{ .SectionTag }}">
