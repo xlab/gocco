@@ -81,7 +81,7 @@ table td {
     max-width: 450px;
     min-width: 450px;
     min-height: 5px;
-    padding: 10px 25px 1px 50px;
+    padding: 25px 25px 1px 50px;
     overflow-x: hidden;
     vertical-align: top;
     text-align: left;
