@@ -262,14 +262,19 @@ func highlightRefs(text []byte, ref string) []byte {
 	if len(ref) == 0 {
 		return text
 	}
-	rx := regexp.MustCompile(fmt.Sprintf("(%s)", ref))
-	return rx.ReplaceAll(text, highlightTpl)
+	// weird shit as \A and \z matching doesn't work?
+	rx := regexp.MustCompile(fmt.Sprintf(`([\s]+)(%s)`, ref))
+	text = rx.ReplaceAll(text, []byte("$1<strong>$2</strong>"))
+	rx = regexp.MustCompile(fmt.Sprintf(`(%s)([\s]+)`, ref))
+	text = rx.ReplaceAll(text, []byte("<strong>$1</strong>$2"))
+	rx = regexp.MustCompile(fmt.Sprintf(`([\s]+)(%s)([\s]+)`, ref))
+	text = rx.ReplaceAll(text, []byte("$1<strong>$2</strong>$3"))
+	return text
 }
 
 var (
 	referenceRx  = regexp.MustCompile(`@@([\w]+)`)
 	referenceTpl = []byte(`<a href="#section-$1" title="Jump to $1">$1</a>`)
-	highlightTpl = []byte(`<strong>$1</strong>`)
 )
 
 // render the final HTML
