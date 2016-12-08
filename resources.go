@@ -25,7 +25,7 @@ h1, h2, h3, h4, h5, h6 {
   color: #F59331;
 }
 table.docs {
-  margin-top: 40px;
+  margin-top: 25px;
 }
 #container {
   position: relative;
