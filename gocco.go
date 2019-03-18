@@ -225,6 +225,20 @@ func destination(source string) string {
 	return "docs/" + base[0:strings.LastIndex(base, filepath.Ext(base))] + ".html"
 }
 
+func destinationTOC(source string) string {
+	title := filepath.Base(source)
+	title = strings.TrimSuffix(title, filepath.Ext(source))
+	title = strings.TrimPrefix(title, "docs_")
+	return title + ".html"
+}
+
+func titleTOC(source string) string {
+	title := filepath.Base(source)
+	title = strings.TrimSuffix(title, filepath.Ext(source))
+	title = strings.TrimPrefix(title, "docs_")
+	return title
+}
+
 func getSectionTag(index int, firstCodeLine string) string {
 	if !strings.HasPrefix(firstCodeLine, "func") &&
 		!strings.HasPrefix(firstCodeLine, "type") &&
@@ -263,6 +277,7 @@ func highlightRefs(text []byte, ref string) []byte {
 		return text
 	}
 	// weird shit as \A and \z matching doesn't work?
+	ref = regexp.QuoteMeta(ref)
 	rx := regexp.MustCompile(fmt.Sprintf(`([\s]+)(%s)`, ref))
 	text = rx.ReplaceAll(text, []byte("$1<strong>$2</strong>"))
 	rx = regexp.MustCompile(fmt.Sprintf(`(%s)([\s]+)`, ref))
@@ -280,6 +295,9 @@ var (
 // render the final HTML
 func generateHTML(source string, sections *list.List) {
 	title := filepath.Base(source)
+	title = strings.TrimSuffix(title, filepath.Ext(source))
+	title = strings.TrimPrefix(title, "docs_")
+
 	dest := destination(source)
 	// convert every `Section` into corresponding `TemplateSection`
 	sectionsArray := make([]*TemplateSection, 0, sections.Len())
@@ -311,8 +329,8 @@ func goccoTemplate(data TemplateData) []byte {
 	t, err := template.New("gocco").Funcs(
 		// introduce the two functions that the template needs
 		template.FuncMap{
-			"base":        filepath.Base,
-			"destination": destination,
+			"title":       titleTOC,
+			"destination": destinationTOC,
 		}).Parse(HTML)
 	if err != nil {
 		panic(err)

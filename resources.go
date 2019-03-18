@@ -22,7 +22,7 @@ p {
 }
 h1, h2, h3, h4, h5, h6 {
   margin: 0px 0 15px 0;
-  color: #F59331;
+  color: #3742fa;
 }
 table.docs {
   margin-top: 25px;
@@ -210,8 +210,8 @@ var HTML = `
         <div id="jump_wrapper">
           <div id="jump_page">
               {{ range .Sources }}
-              <a class="source" href="{{ destination . | base }}">
-                  {{ base . }}
+              <a class="source" href="{{ destination . }}">
+                  {{ title . }}
               </a>
               {{ end }}
           </div>
